@@ -1,0 +1,60 @@
+# airlift manifest — one file per engagement/toolkit.
+# Run on your build host:  ./airlift.py build manifest.example.toml
+
+[bundle]
+name = "engagement-kit"          # -> dist/engagement-kit.tar.gz
+
+# TARGET platform. Leave [target] empty when your build host has the SAME
+# arch + python as the target. Fill it in for cross-platform fetches. This is the
+# #1 source of "works on my box, breaks on the target" pain — see README.
+[target]
+# pip_platform   = "manylinux2014_x86_64"
+# python_version = "311"
+# pip_abi        = "cp311"
+
+# ---- Python tools: fetched as a wheelhouse, installed into an offline venv ----
+[[tools]]
+name = "impacket"
+type = "pip"
+requirements = ["impacket==0.12.0"]
+
+# ---- GitHub release binary shipped inside a .zip: unpack to just the binary ----
+[[tools]]
+name = "nuclei"
+type = "github"
+repo = "projectdiscovery/nuclei"
+tag  = "v3.4.10"                  # pin for reproducibility ("latest" also works)
+asset_match = "linux_amd64.zip"
+unpack = true
+binaries = ["nuclei"]
+
+# ---- GitHub release as a raw binary: give it a clean command name ----
+[[tools]]
+name = "gowitness"
+type = "github"
+repo = "sensepost/gowitness"
+asset_match = "linux-amd64"
+bin_name = "gowitness"
+
+# ---- Any raw file URL. This one is a .gz, so unpack it to the bare binary ----
+[[tools]]
+name = "chisel"
+type = "url"
+url  = "https://github.com/jpillora/chisel/releases/download/v1.10.1/chisel_1.10.1_linux_amd64.gz"
+unpack = true
+bin_name = "chisel"
+
+# ---- Run-from-source tool: shallow clone stored as a tarball ----
+[[tools]]
+name = "linpeas"
+type = "git"
+url  = "https://github.com/peass-ng/PEASS-ng.git"
+ref  = "master"
+
+# ---- Escape hatch: cross-compile your own tool to a static binary ----
+# Runs with $AIRLIFT_OUT set to this tool's output dir.
+[[tools]]
+name = "mytool"
+type = "build"
+cwd  = "./mytool"
+command = 'CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o "$AIRLIFT_OUT/mytool" .'
